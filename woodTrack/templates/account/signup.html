@@ -1,0 +1,27 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Registro{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+    <div class="text-center mb-3">
+        <h2 class="fw-bold" style="color: #2C3E50;">Crear una cuenta</h2>
+        <p class="text-muted">Llena los campos para registrarte.</p>
+    </div>
+
+    <form method="post" action="{% url 'account_signup' %}" class="rounded shadow p-3" style="background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-outline-dark" style="padding: 0.5rem 2rem; border-radius: 8px;">
+                Registrarse
+            </button>
+        </div>
+    </form>
+
+    <div class="text-center mt-3">
+        <p class="text-muted">¿Ya tienes cuenta? <a href="{% url 'account_login' %}" style="color: #2C3E50;">Inicia sesión aquí</a>.</p>
+    </div>
+</div>
+{% endblock %}

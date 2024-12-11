@@ -1,0 +1,58 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Perfil del Usuario{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: #2C3E50;">Perfil del Usuario</h2>
+    </div>
+
+    <div class="rounded shadow-lg p-4" style="background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <label for="id_username" class="form-label" style="color: #2C3E50;">Nombre de Usuario</label>
+                <input type="text" class="form-control" id="id_username" name="username" value="{{ user.username }}" readonly>
+            </div>
+
+            <div class="row mb-3">
+                <label for="id_first_name" class="form-label" style="color: #2C3E50;">Nombre</label>
+                <input type="text" class="form-control" id="id_first_name" name="first_name" value="{{ user.first_name }}">
+            </div>
+
+            <div class="row mb-3">
+                <label for="id_last_name" class="form-label" style="color: #2C3E50;">Apellido</label>
+                <input type="text" class="form-control" id="id_last_name" name="last_name" value="{{ user.last_name }}">
+            </div>
+
+            <div class="row mb-3">
+                <label for="id_email" class="form-label" style="color: #2C3E50;">Correo Electrónico</label>
+                <input type="email" class="form-control" id="id_email" name="email" value="{{ user.email }}">
+            </div>
+
+            {% if user.is_superuser or user.role == user.ADMINISTRADOR %}
+            <div class="row mb-3">
+                <label for="id_role" class="form-label" style="color: #2C3E50;">Rol</label>
+                <select class="form-select" id="id_role" name="role">
+                    {% for choice in user.ROLE_CHOICES %}
+                    <option value="{{ choice.0 }}" {% if choice.0 == user.role %}selected{% endif %}>
+                        {{ choice.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <div class="row mb-3">
+                <label for="id_role" class="form-label" style="color: rgba(39, 43, 0, 0.9);">Rol</label>
+                <input type="text" class="form-control" id="id_role" value="{{ user.get_role_display }}" readonly>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-dark w-100 mt-3" style="padding: 0.6rem; border-radius: 10px;">
+                Actualizar Perfil
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

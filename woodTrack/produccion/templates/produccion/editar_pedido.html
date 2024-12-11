@@ -1,0 +1,98 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Editar Pedido{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: #2C3E50;">Editar Pedido</h2>
+    </div>
+
+    <!-- Mostrar errores del estado_form -->
+    {% if estado_form.errors %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Errores en el formulario de estado:</strong>
+        <ul>
+            {% for field, errors in estado_form.errors.items %}
+                <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Mostrar errores del formset -->
+    {% if formset.errors %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Errores en los productos:</strong>
+        <ul>
+            {% for form_errors in formset.errors %}
+                {% for field, errors in form_errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Formulario de edición -->
+    <form method="post" class="rounded shadow-lg p-4" style="background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);">
+        {% csrf_token %}
+        
+        <!-- Estado del Pedido -->
+        <h3 class="fw-semibold mb-3" style="color: #2C3E50;">Estado del Pedido</h3>
+        <div class="mb-4">
+            {{ estado_form.as_p }}
+        </div>
+
+        <!-- Productos del Pedido -->
+        <h3 class="fw-semibold mb-3" style="color: #2C3E50;">Productos</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col" class="text-center">Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Management form (obligatorio para el formset) -->
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                    <tr>
+                        <!-- Incluye los campos ocultos -->
+                        {{ form.id }}
+                        <td>{{ form.producto }}</td>
+                        <td>{{ form.cantidad }}</td>
+                        <td class="text-center">{{ form.DELETE }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Checkbox para ajustar inventario -->
+        <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" id="restar_material" name="restar_material">
+            <label class="form-check-label" for="restar_material">
+                Ajustar inventario automáticamente
+            </label>
+        </div>
+
+        <!-- Botón de guardar -->
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.5rem; border-radius: 10px;">Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+        var toastList = toastElList.map(function (toastEl) {
+            return new bootstrap.Toast(toastEl);
+        });
+        toastList.forEach(toast => toast.show());
+    });
+</script>
+{% endblock %}

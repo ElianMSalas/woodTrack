@@ -1,0 +1,171 @@
+{% extends "produccion/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4 fw-semibold" style="color:#2C3E50">Dashboard de Producción</h1>
+
+    <!-- Resumen General -->
+    <div class="row mb-3">
+        <div class="col-md-4 col-sm-6 mb-2">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center py-3">
+                    <h5 class="card-title mb-2">Órdenes en Proceso</h5>
+                    <h3>{{ ordenes_en_proceso }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-2">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center py-3">
+                    <h5 class="card-title mb-2">Órdenes Completadas</h5>
+                    <h3>{{ ordenes_completadas }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-2">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center py-3">
+                    <h5 class="card-title mb-2">Órdenes Pendientes</h5>
+                    <h3>{{ ordenes_pendientes }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Producción Actual -->
+    <div class="table-responsive rounded shadow-sm" style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(84, 88, 47, 0.1);">
+        <table class="table table-borderless align-middle mb-0" style="font-size: 0.9rem;">
+            <thead style="background-color: #2C3E50; color: #ffffff;">
+                <tr>
+                    <th scope="col" style="padding: 0.75rem;">#</th>
+                    <th scope="col" style="padding: 0.75rem;">Pedido</th>
+                    <th scope="col" style="padding: 0.75rem;">Estado</th>
+                    <th scope="col" style="padding: 0.75rem;">Inicio</th>
+                    <th scope="col" style="padding: 0.75rem;">Fin</th>
+                    <th scope="col" style="padding: 0.75rem;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produccion in page_obj %}
+                <tr style="transition: background-color 0.3s; border-radius: 5px;">
+                    <td style="padding: 0.75rem; color: rgba(39, 43, 0, 0.8);">{{ produccion.id }}</td>
+                    <td style="padding: 0.75rem; color: #2C3E50;">{{ produccion.pedido }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span class="badge {% if produccion.estado_produccion == 'Completado' %}bg-success{% elif produccion.estado_produccion == 'En proceso' %}bg-warning text-dark{% else %}bg-secondary{% endif %}" style="padding: 0.3rem 0.6rem; border-radius: 10px;">
+                            {{ produccion.estado_produccion }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem; color: #2C3E50;">{{ produccion.fecha_inicio|date:"d M, Y" }}</td>
+                    <td style="padding: 0.75rem; color: #2C3E50;">{{ produccion.fecha_fin|date:"d M, Y" }}</td>
+                    <td style="padding: 0.75rem;">
+                        <a href="{% url 'produccion:gestion_produccion' produccion.id %}" class="btn btn-outline-success btn-sm" style="padding: 0.3rem 0.75rem; border-radius: 8px;">
+                            Ver
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 0.75rem; color: #2C3E50;">No hay órdenes en producción actualmente.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Gráfica de Estado de Producción -->
+    <div class="card mb-3">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Estado de Producción</h5>
+        </div>
+        <div class="card-body text-center p-3">
+            <canvas id="estadoProduccionChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Inventario Crítico -->
+    <div class="card mb-3">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Inventario Crítico</h5>
+        </div>
+        <div class="card-body p-2">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Material</th>
+                        <th>Stock</th>
+                        <th>Punto Reorden</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventarios %}
+                    <tr class="{% if item.status == 'Crítico' %}table-danger{% elif item.status == 'Reabastecer' %}table-warning{% else %}table-success{% endif %}">
+                        <td>{{ item.nombre_material }}</td>
+                        <td>{{ item.cantidad_stock }}</td>
+                        <td>{{ item.punto_reorden }}</td>
+                        <td>{{ item.status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No hay inventarios críticos actualmente.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('estadoProduccionChart').getContext('2d');
+    const estadoProduccionChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completado', 'En proceso', 'Pendiente'],
+            datasets: [{
+                data: [{{ ordenes_completadas }}, {{ ordenes_en_proceso }}, {{ ordenes_pendientes }}],
+                backgroundColor: ['#28a745', '#007bff', '#dc3545'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

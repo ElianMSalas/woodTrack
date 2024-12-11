@@ -1,0 +1,54 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Crear Pedido{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+    <div class="text-center mb-3">
+        <h2 class="fw-bold" style="color: #2C3E50;">Crear Pedido</h2>
+        <p class="text-muted">Complete la información del cliente y el producto para crear un nuevo pedido.</p>
+    </div>
+
+    <form method="post" action="{% url 'produccion:crear_pedido' %}" class="rounded shadow p-3" style="background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);">
+        {% csrf_token %}
+
+        <!-- Información del Cliente -->
+        <div class="mb-3">
+            <h3 class="fw-semibold" style="color: #2C3E50; margin-bottom: 0.5rem;">Información del Cliente</h3>
+            <div class="row g-2">
+                {{ cliente_form.as_p }}
+            </div>
+        </div>
+
+        <!-- Información del Producto -->
+        <div class="mb-3">
+            <h3 class="fw-semibold" style="color: #2C3E50; margin-bottom: 0.5rem;">Producto</h3>
+            {{ formset.management_form }}
+            <div id="productos">
+                {% for form in formset %}
+                    <div class="producto-form p-2 rounded mb-2" style="background-color: rgba(255, 255, 255, 0.8); border: 1px solid rgba(190, 192, 146, 0.5); box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);">
+                        {{ form.as_p }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Botón de envío del formulario -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-outline-dark" style="padding: 0.5rem 2rem; border-radius: 8px;">
+                Crear Pedido
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+        var toastList = toastElList.map(function (toastEl) {
+            return new bootstrap.Toast(toastEl);
+        });
+        toastList.forEach(toast => toast.show());
+    });
+</script>
+{% endblock %}

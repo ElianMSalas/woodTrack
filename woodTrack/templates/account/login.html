@@ -1,0 +1,52 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+{% load static %}
+<style>
+    body {
+        background-color: #1a48fe;
+    }
+</style>
+<div class="container-fluid" style="height: 80vh; background-color: #1a48fe;">
+    <div class="row h-100">
+        <!-- Sección Izquierda -->
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
+            <div class="text-white px-5">
+                <h1 class="fw-bold mb-4">Controla tus operaciones en un mismo lugar</h1>
+                <p class="mb-4" style="line-height: 1.6;">Optimiza cada etapa de tu producción, desde la creación del pedido hasta la entrega final, con herramientas en tiempo real.</p>
+                <div>
+                    <!-- Elemento decorativo (opcional, puedes añadir un gráfico o imagen) -->
+                    <img src="{% static 'img/sistema.png' %}" alt="Example File" style=" max-width: 400px; border-radius: 8px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Derecha -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center" style="background-color:#1a48fe;" >
+            <div class="card p-4 border-0 shadow-sm" style="max-width: 500px; width: 100%; background-color:white; border-radius: 12px;">
+                <!-- Título -->
+                <h2 class="fw-bold text-center mb-3" style="color: #333;">Iniciar Sesión</h2>
+                <p class="text-center text-muted mb-4" style="font-size: 0.9rem;">Accede a tu cuenta para continuar</p>
+
+                <!-- Formulario -->
+                <form method="post" action="{% url 'account_login' %}">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary w-100 mt-3" style="padding: 0.75rem; font-size: 1rem; border-radius: 8px;">
+                        Iniciar Sesión
+                    </button>
+                </form>
+
+                <!-- Enlace a Registro -->
+                <div class="text-center mt-3">
+                    <p class="text-muted" style="font-size: 0.85rem;">
+                        ¿No tienes cuenta? <a href="{% url 'account_signup' %}" class="text-primary" style="text-decoration: none;">Regístrate</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

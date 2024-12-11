@@ -1,0 +1,193 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Dashboard - Encargado de Ventas{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: #2C3E50;">
+            <i class="bi bi-bar-chart-line"></i> Dashboard de Ventas
+        </h2>
+    </div>
+
+    <!-- Resumen Compacto -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-primary shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-list-ul"></i> Total Pedidos</h5>
+                    <h3>{{ total_pedidos }}</h3>
+                    <p class="card-text">Pedidos registrados en el sistema</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-success shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> Completados</h5>
+                    <h3>{{ pedidos_completados }}</h3>
+                    <p class="card-text">Pedidos entregados exitosamente</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-warning shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clock-history"></i> Pendientes</h5>
+                    <h3>{{ pedidos_pendientes }}</h3>
+                    <p class="card-text">Pedidos en proceso o pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-danger shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-circle"></i> Stock Crítico</h5>
+                    <h3>{{ stock_critico }}</h3>
+                    <p class="card-text">Materiales con stock bajo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Fecha -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3"><i class="bi bi-calendar-range"></i> Filtrar Pedidos</h5>
+            <form method="GET" action="">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label for="start_date" class="form-label">Fecha Inicio</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-5">
+                        <label for="end_date" class="form-label">Fecha Fin</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gráficos y Tabla -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-bold"><i class="bi bi-pie-chart"></i> Estado de Pedidos</h6>
+                    <canvas id="pedidosStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-bold"><i class="bi bi-bar-chart"></i> Productos Más Vendidos</h6>
+                    <canvas id="topProductosChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Pedidos -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3"><i class="bi bi-cart-check"></i> Pedidos por Rango de Fechas</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Cliente</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in page_obj %}
+                        <tr>
+                            <td>{{ pedido.id }}</td>
+                            <td>{{ pedido.cliente.nombre_cliente }}</td>
+                            <td>{{ pedido.fecha_pedido }}</td>
+                            <td>
+                                <span class="badge {% if pedido.estado_pedido == 'Completado' %}bg-success{% elif pedido.estado_pedido == 'Pendiente' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ pedido.estado_pedido }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'produccion:detalle_pedido' pedido.id %}" class="btn btn-sm btn-outline-primary">Ver</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No se encontraron pedidos para este rango de fechas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" aria-label="Siguiente">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Pedidos Status Chart
+    const pedidosStatusCtx = document.getElementById('pedidosStatusChart').getContext('2d');
+    const pedidosStatusChart = new Chart(pedidosStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pendiente', 'En Proceso', 'Completado'],
+            datasets: [{
+                data: [{{ pedidos_pendientes }}, {{ pedidos_en_proceso }}, {{ pedidos_completados }}],
+                backgroundColor: ['#F39C12', '#3498DB', '#2ECC71']
+            }]
+        }
+    });
+
+    // Top Productos Chart
+    const topProductosCtx = document.getElementById('topProductosChart').getContext('2d');
+    const topProductosChart = new Chart(topProductosCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for producto in top_productos %}'{{ producto.producto__nombre_producto }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Productos Más Vendidos',
+                data: [{% for producto in top_productos %}{{ producto.cantidad_vendida }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: '#1ABC9C'
+            }]
+        }
+    });
+</script>
+{% endblock %}

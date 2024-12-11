@@ -1,0 +1,102 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Dashboard de Logística{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Dashboard de Logística</h1>
+
+    <!-- Resumen General -->
+    <div class="row mb-3">
+        <div class="col-md-4 col-sm-6 mb-2">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center py-3">
+                    <h5 class="card-title mb-2">Órdenes Pendientes</h5>
+                    <h3>{{ ordenes_pendientes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-2">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center py-3">
+                    <h5 class="card-title mb-2">Órdenes Enviadas</h5>
+                    <h3>{{ ordenes_enviadas }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-2">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center py-3">
+                    <h5 class="card-title mb-2">Órdenes Entregadas</h5>
+                    <h3>{{ ordenes_entregadas }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Logística -->
+    <div class="table-responsive rounded shadow-sm" style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(84, 88, 47, 0.1);">
+        <table class="table table-borderless align-middle mb-0" style="font-size: 0.9rem;">
+            <thead style="background-color: rgba(84, 88, 47, 0.8); color: #ffffff;">
+                <tr>
+                    <th scope="col" style="padding: 0.75rem;">#</th>
+                    <th scope="col" style="padding: 0.75rem;">Producción</th>
+                    <th scope="col" style="padding: 0.75rem;">Estado Entrega</th>
+                    <th scope="col" style="padding: 0.75rem;">Fecha de Entrega</th>
+                    <th scope="col" style="padding: 0.75rem;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for logistica in page_obj %}
+                <tr>
+                    <td style="padding: 0.75rem;">{{ logistica.id }}</td>
+                    <td style="padding: 0.75rem;">Producción {{ logistica.produccion.id }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span class="badge {% if logistica.estado_entrega == 'Pendiente' %}bg-secondary{% elif logistica.estado_entrega == 'Enviado' %}bg-warning{% else %}bg-success{% endif %}">
+                            {{ logistica.estado_entrega }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem;">{{ logistica.fecha_entrega|default:"No asignada" }}</td>
+                    <td style="padding: 0.75rem;">
+                        <a href="{% url 'produccion:gestion_logistica' logistica.id %}" class="btn btn-outline-dark btn-sm">
+                            Gestionar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center" style="padding: 0.75rem;">No hay órdenes pendientes ni enviadas para gestionar.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

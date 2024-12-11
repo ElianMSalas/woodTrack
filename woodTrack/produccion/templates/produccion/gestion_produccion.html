@@ -1,0 +1,126 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Gestión de Producción{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold" style="color: #2C3E50;">Gestión de Producción para Pedido {{ produccion.pedido.id }}</h2>
+    </div>
+
+    <form method="post" action="{% url 'produccion:gestion_produccion' produccion.id %}" class="rounded shadow-lg p-4" style="background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px);">
+        {% csrf_token %}
+        
+        <!-- Estado de Producción -->
+        <div class="mb-4">
+            <label for="estado_produccion" class="form-label fw-semibold" style="color: #2C3E50;">Estado de Producción</label>
+            <select class="form-select shadow-sm" id="estado_produccion" name="estado_produccion" style="background-color: rgba(255, 255, 255, 0.8); border: 1px solid rgba(190, 192, 146, 0.5);">
+                <option value="Asignado" {% if produccion.estado_produccion == "Asignado" %}selected{% endif %}>Asignado</option>
+                <option value="En proceso" {% if produccion.estado_produccion == "En proceso" %}selected{% endif %}>En proceso</option>
+                <option value="Completado" {% if produccion.estado_produccion == "Completado" %}selected{% endif %}>Completado</option>
+            </select>
+        </div>
+
+        <!-- Fecha de Inicio -->
+        <div class="mb-4">
+            <label for="fecha_inicio" class="form-label fw-semibold" style="color: #2C3E50;">Fecha de Inicio</label>
+            <input type="date" class="form-control shadow-sm" id="fecha_inicio" name="fecha_inicio" value="{{ produccion.fecha_inicio|date:'Y-m-d' }}" style="background-color: rgba(255, 255, 255, 0.8); border: 1px solid rgba(190, 192, 146, 0.5);">
+        </div>
+
+        <!-- Fecha de Fin -->
+        <div class="mb-4">
+            <label for="fecha_fin" class="form-label fw-semibold" style="color: #2C3E50;">Fecha de Fin</label>
+            <input type="date" class="form-control shadow-sm" id="fecha_fin" name="fecha_fin" value="{{ produccion.fecha_fin|date:'Y-m-d' }}" style="background-color: rgba(255, 255, 255, 0.8); border: 1px solid rgba(190, 192, 146, 0.5);">
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-outline-dark" style="padding: 0.6rem 2rem; border-radius: 10px;">
+                Guardar Cambios
+            </button>
+            <a href="{% url 'produccion:lista_pedidos' %}" class="btn btn-outline-secondary ms-2" style="padding: 0.6rem 2rem; border-radius: 10px;">
+                Volver a Lista de Pedidos
+            </a>
+        </div>
+    </form>
+
+    <!-- Productos Relacionados -->
+    <div class="mt-5">
+        <h3 class="fw-bold" style="color: #2C3E50;">Productos del Pedido</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido_producto in productos %}
+                    <tr>
+                        <td>{{ pedido_producto.producto.nombre_producto }}</td>
+                        <td>{{ pedido_producto.cantidad }}</td>
+                        <td>{{ pedido_producto.producto.descripcion|default:"Sin descripción" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sección de Imágenes de Calidad -->
+    <div class="mt-5">
+        <h3 class="fw-bold" style="color: #2C3E50;">Imágenes de Calidad Asociadas</h3>
+        <div class="row">
+            {% if imagenes_calidad %}
+                {% for imagen in imagenes_calidad %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-sm">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#modalImagen{{ imagen.id }}">
+                                <img src="{{ imagen.imagen.url }}" class="card-img-top" alt="{{ imagen.descripcion|default:'Imagen de Calidad' }}" style="max-height: 200px; object-fit: cover;">
+                            </a>
+                            <div class="card-body">
+                                <p class="card-text">{{ imagen.descripcion|default:"Sin descripción" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="modalImagen{{ imagen.id }}" tabindex="-1" aria-labelledby="modalImagenLabel{{ imagen.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modalImagenLabel{{ imagen.id }}">Imagen de Calidad</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <img src="{{ imagen.imagen.url }}" class="img-fluid" alt="{{ imagen.descripcion|default:'Imagen de Calidad' }}">
+                                    <p class="mt-2">{{ imagen.descripcion|default:"Sin descripción" }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <p class="text-muted">No hay imágenes asociadas a este control de calidad.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+        var toastList = toastElList.map(function (toastEl) {
+            return new bootstrap.Toast(toastEl);
+        });
+        toastList.forEach(toast => toast.show());
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}opsTrack{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-bell {
+            position: relative;
+        }
+
+        .notification-bell .notification-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            line-height: 18px;
+            display: none;
+        }
+
+        .notification-bell.has-notifications .notification-indicator {
+            display: inline-block;
+        }
+
+        .notification-bell .dropdown-menu {
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+
+        .notification-item {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 1px solid #f1f1f1;
+    position: relative;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa; /* Fondo más claro al pasar el cursor */
+}
+
+.notification-type {
+    width: 5px; /* Ancho de la barra vertical */
+    height: 100%; /* Altura de la barra vertical */
+    margin-right: 10px; /* Separación del texto */
+}
+
+.notification-text {
+    flex-grow: 1;
+    word-wrap: break-word;
+    color: #000; /* Texto negro */
+    font-size: 0.9rem;
+}
+
+
+        .notification-empty {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.85rem;
+            padding: 10px;
+        }
+
+        .footer {
+            background-color: white;
+            color: black;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            padding: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'produccion:dashboard_ventas' %}">
+                <img src="{% static 'img/bh-logo.png' %}" alt="Logo" style="height: 60px;">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown notification-bell {% if notifications %}has-notifications{% endif %}">
+                            <a class="nav-link" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell" style="color: #1a48fe; font-size: 1.5rem;"></i>
+                                <span class="notification-indicator">
+                                    {% if notifications and notifications|length > 0 %}{{ notifications|length }}{% endif %}
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                                {% if notifications and notifications|length > 0 %}
+                                    {% for notification in notifications %}
+                                        <li class="notification-item">
+                                            <div class="notification-type" style="background-color:
+                                                {% if notification.tags == 'error' %}red
+                                                {% elif notification.tags == 'warning' %}orange
+                                                {% elif notification.tags == 'info' %}blue
+                                                {% else %}green
+                                                {% endif %};"></div>
+                                            <div class="notification-text">{{ notification.message }}</div>
+                                        </li>
+                                    {% endfor %}
+                                    <li class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-center text-danger" href="#" onclick="markAsRead()">Marcar como leídas</a>
+                                    </li>
+                                {% else %}
+                                    <li><span class="notification-empty">No hay nuevas notificaciones</span></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        <!-- Otras opciones según el rol -->
+                        {% if user.role == "VENTAS" %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'produccion:crear_pedido' %}">Crear Pedido</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'produccion:lista_pedidos' %}">Lista Pedidos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'produccion:gestionar_inventario' %}">Inventario</a>
+                            </li>
+                        {% elif user.role == "ADMIN" %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'produccion:gestion_usuarios' %}">Gestión Usuarios</a>
+                            </li>
+                        {% elif user.role == "PRODUCCION" %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'produccion:dashboard_produccion' %}">Dashboard</a>
+                        </li>
+                        {% elif user.role == "LOGISTICA" %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'produccion:dashboard_logistica' %}">Dashboard</a>
+                        </li>
+                        {% elif user.role == "CALIDAD" %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'produccion:dashboard_calidad' %}">Dashboard</a>
+                        </li>
+
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                <!-- Menú de Usuario -->
+                {% if user.is_authenticated %}
+                    <ul class="navbar-nav ms-3">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ user.get_full_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'produccion:profile' %}"><i class="fas fa-user"></i> Perfil</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                {% else %}
+                    <ul class="navbar-nav ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'account_login' %}">Login</a>
+                        </li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modal para Cerrar Sesión -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="logoutModalLabel">Confirmar Cierre de Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Cerrar Sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container my-5 pt-5">
+        <div class="content-wrapper">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2024 opsTrack. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function markAsRead() {
+            fetch("{% url 'produccion:mark_notifications_read' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const bell = document.querySelector(".notification-bell");
+                    const notificationList = document.querySelector(".notification-bell .dropdown-menu");
+                    bell.classList.remove("has-notifications");
+                    notificationList.innerHTML = `
+                        <li><span class="notification-empty">No hay nuevas notificaciones</span></li>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

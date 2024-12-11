@@ -1,0 +1,112 @@
+{% extends "produccion/base.html" %}
+
+{% block title %}Gestión de Pedidos{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: #2C3E50; font-size: 1.8rem;">Gestión de Pedidos</h2>
+    </div>
+
+    <!-- Tabla Responsiva -->
+    <div class="table-responsive rounded shadow-sm" style="background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(84, 88, 47, 0.1);">
+        <table class="table table-borderless align-middle mb-0" style="font-size: 0.9rem;">
+            <thead style="background-color: #2C3E50; color: #ffffff;">
+                <tr>
+                    <th>ID Pedido</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in page_obj %}
+                <tr style="transition: background-color 0.3s; border-radius: 5px;">
+                    <td style="padding: 0.75rem; color: rgba(39, 43, 0, 0.8);">{{ item.id }}</td>
+                    <td style="padding: 0.75rem; color: r#2C3E50;">{{ item.cliente.nombre_cliente }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span class="badge {% if item.estado_pedido == 'Completado' %}bg-success{% elif item.estado_pedido == 'En proceso' %}bg-warning text-dark{% else %}bg-secondary{% endif %}" style="padding: 0.3rem 0.6rem; border-radius: 10px;">
+                            {{ item.estado_pedido }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem; color: #2C3E50;">{{ item.fecha_pedido|date:"d M, Y" }}</td>
+                    <td style="padding: 0.75rem;">
+                        <a href="{% url 'produccion:detalle_pedido' item.id %}" class="btn btn-outline-dark btn-sm" style="padding: 0.3rem 0.75rem; border-radius: 8px;">
+                            Ver Detalles
+                        </a>
+                        <a href="{% url 'produccion:editar_pedido' item.id %}" class="btn btn-outline-dark btn-sm" style="padding: 0.3rem 0.75rem; border-radius: 8px;">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not page_obj %}
+                <tr>
+                    <td colspan="5" class="text-center" style="padding: 0.75rem; color: #2C3E50;">
+                        No hay pedidos disponibles.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Controles de Paginación -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- Botón de Primera Página -->
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="First">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&lsaquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo;</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">&lsaquo;</span>
+            </li>
+            {% endif %}
+
+            <!-- Números de Página -->
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            <!-- Botón de Última Página -->
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&rsaquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&rsaquo;</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">&raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

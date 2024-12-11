@@ -1,0 +1,8 @@
+django-allauth
+asgiref
+django
+Pillow
+pip
+psycopg2-binary 
+sqlparse 
+tzdata 

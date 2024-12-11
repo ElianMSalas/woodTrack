@@ -1,0 +1,188 @@
+{% extends 'produccion/base.html' %}
+{% load static %}
+{% block content %}
+
+<h1 class="fw-semibold" style="color: #2C3E50; margin-bottom: 0.5rem; margin-top: 2rem;">Gestión de Inventario</h1>
+
+
+
+<!-- Tabla de Inventario -->
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Material</th>
+            <th>Stock</th>
+            <th>Punto de Reorden</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in inventarios %}
+        <tr>
+            <td>{{ item.nombre_material }}</td>
+            <td>{{ item.cantidad_stock }}</td>
+            <td>{{ item.punto_reorden }}</td>
+            <td>
+                <!-- Botones que abren ventanas modales -->
+                <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditar{{ item.pk }}">Editar</button>
+                <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalEliminar{{ item.pk }}">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<style>
+/* Contenedor de notificaciones flotantes */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Estilo básico de notificación */
+.notification {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 300px;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-out;
+    font-size: 16px;
+    color: #fff;
+}
+
+/* Colores para cada tipo de mensaje */
+.alert-success {
+    background-color: #28a745;
+}
+.alert-info {
+    background-color: #17a2b8;
+}
+.alert-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+.alert-danger {
+    background-color: #dc3545;
+}
+
+/* Botón de cerrar */
+.close-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+/* Animación */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+
+<!-- Modales para cada material -->
+{% for item in inventarios %}
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar{{ item.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="material_id" value="{{ item.pk }}">
+                    <div class="mb-3">
+                        <label for="nombre{{ item.pk }}" class="form-label">Nombre del Material</label>
+                        <input type="text" class="form-control" id="nombre{{ item.pk }}" name="nombre_material" value="{{ item.nombre_material }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cantidad{{ item.pk }}" class="form-label">Cantidad en Stock</label>
+                        <input type="number" class="form-control" id="cantidad{{ item.pk }}" name="cantidad_stock" value="{{ item.cantidad_stock }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reorden{{ item.pk }}" class="form-label">Punto de Reorden</label>
+                        <input type="number" class="form-control" id="reorden{{ item.pk }}" name="punto_reorden" value="{{ item.punto_reorden }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Reabastecer -->
+<div class="modal fade" id="modalReabastecer{{ item.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reabastecer Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reabastecer">
+                    <input type="hidden" name="material_id" value="{{ item.pk }}">
+                    <div class="mb-3">
+                        <label for="cantidadReabastecer{{ item.pk }}" class="form-label">Cantidad a añadir</label>
+                        <input type="number" class="form-control" id="cantidadReabastecer{{ item.pk }}" name="cantidad" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Reabastecer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminar{{ item.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar el material "{{ item.nombre_material }}"?</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="material_id" value="{{ item.pk }}">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Script para cerrar notificaciones automáticamente -->
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(el => el.remove());
+    }, 5000);
+</script>
+{% endblock %}
